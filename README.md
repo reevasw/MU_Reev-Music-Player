@@ -31,9 +31,8 @@ MU Reev adalah aplikasi pemutar musik Android modern yang dibangun dengan Kotlin
 
 ## 📸 Cuplikan Layar
 
-| Main Screen | Player | Playlist | Stats |
-| :---: | :---: | :---: | :---: |
-| ![Main]([https://via.placeholder.com/200x400](https://media.discordapp.net/attachments/1461727943389610114/1488854899545477140/Screenshot_2026-04-01-17-54-21-861_com.example.mureev.jpg?ex=69ce4bad&is=69ccfa2d&hm=aec5f8b9f29d8d59a4029063ea3f9a3a14ab85db007436c46c796add5680574b&=&format=webp&width=385&height=856)) | 
-  ![Player]([https://via.placeholder.com/200x400](https://media.discordapp.net/attachments/1461727943389610114/1488854899872501894/Screenshot_2026-04-01-17-54-32-003_com.example.mureev.jpg?ex=69ce4bad&is=69ccfa2d&hm=22cd09978f37832b5489abe0bff33e9a489ef6e7b076f250e3c86bd357c20176&=&format=webp&width=385&height=856)) | 
-  ![Playlist]([https://via.placeholder.com/200x400](https://media.discordapp.net/attachments/1461727943389610114/1488854900204114001/Screenshot_2026-04-01-17-56-49-029_com.example.mureev.jpg?ex=69ce4bad&is=69ccfa2d&hm=1daf0d280cda410decb8f59767acb0cb4e7792f348575a1414721cccf74eb103&=&format=webp&width=385&height=856)) | 
-  ![Stats]([https://via.placeholder.com/200x400](https://media.discordapp.net/attachments/1461727943389610114/1488854900573081731/Screenshot_2026-04-01-17-57-01-909_com.example.mureev.jpg?ex=69ce4bad&is=69ccfa2d&hm=a90c8a27acbfeb013786fb805de683f6750422d24ceae98b257ce3eb5c26e72a&=&format=webp&width=385&height=856)) |
+*   **Main Screen**: <img width="1220" height="2712" alt="image" src="https://github.com/user-attachments/assets/9fa83a7c-9b12-43bc-970e-83178fd99ffa" />
+*   **Player**: <img width="1220" height="2712" alt="image" src="https://github.com/user-attachments/assets/515dfe0f-6e56-4e75-ac67-21932055d6a6" />
+*   **Playlist**: <img width="1220" height="2712" alt="image" src="https://github.com/user-attachments/assets/f2dfedad-c856-4640-bae0-7359f5df153b" />
+*   **Stats**:  <img width="1220" height="2712" alt="image" src="https://github.com/user-attachments/assets/627c1986-9a2d-4dc2-84d4-d056ca38bf87" />
+
