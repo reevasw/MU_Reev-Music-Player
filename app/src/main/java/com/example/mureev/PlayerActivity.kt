@@ -231,7 +231,7 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         }
     }
 
-    // Fungsi showLyrics sekarang hanya untuk membuka dialog pertama kali
+    // Fungsi showLyrics sekarang sudah benar memanggil API
     private fun showLyrics(audioFilePath: String) {
         try {
             val audioFile: AudioFile = AudioFileIO.read(File(audioFilePath))
@@ -241,15 +241,43 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
                 val parsedLyrics = parseLrc(lyricsText)
                 if (parsedLyrics.isNotEmpty()) {
                     setupKaraokeDialog(parsedLyrics)
-                } else {
-                    showLyricsSearchDialog(musicListPA[songPosition].artist, musicListPA[songPosition].title)
+                    return
                 }
-            } else {
-                showLyricsSearchDialog(musicListPA[songPosition].artist, musicListPA[songPosition].title)
             }
+            
+            // Jika tidak ada lirik di file, cari di internet
+            fetchLyricsFromInternet()
+            
         } catch (e: Exception) {
-            Toast.makeText(this, "Gagal memuat lirik", Toast.LENGTH_LONG).show()
+            fetchLyricsFromInternet()
         }
+    }
+
+    private fun fetchLyricsFromInternet() {
+        val currentSong = musicListPA[songPosition]
+        val apiService = LyricsApiService()
+        
+        Toast.makeText(this, "Mencari lirik online...", Toast.LENGTH_SHORT).show()
+        
+        apiService.fetchLyrics(currentSong.artist, currentSong.title, object : LyricsApiService.LyricsCallback {
+            override fun onSuccess(lyrics: String) {
+                runOnUiThread {
+                    val parsedLyrics = parseLrc(lyrics)
+                    if (parsedLyrics.isNotEmpty()) {
+                        setupKaraokeDialog(parsedLyrics)
+                    } else {
+                        // Jika ada lirik tapi format plain (bukan LRC), bungkus sebagai satu baris atau tampilkan di search
+                        showLyricsSearchDialog(currentSong.artist, currentSong.title)
+                    }
+                }
+            }
+
+            override fun onFailure(error: String) {
+                runOnUiThread {
+                    showLyricsSearchDialog(currentSong.artist, currentSong.title)
+                }
+            }
+        })
     }
 
     // Fungsi setupKaraokeDialog sekarang berisi logika sinkronisasi yang lebih baik
@@ -310,11 +338,9 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
                         // ▼▼▼ LOGIKA SCROLL BARU YANG LEBIH BAIK ▼▼▼
                         val smoothScroller = object : LinearSmoothScroller(this@PlayerActivity) {
                             override fun getVerticalSnapPreference(): Int {
-                                // Opsi ini memberikan kontrol penuh pada kalkulasi scroll
                                 return SNAP_TO_ANY
                             }
 
-                            // Fungsi ini menghitung jarak yang tepat untuk membuat item berada di tengah
                             override fun calculateDyToMakeVisible(view: View, snapPreference: Int): Int {
                                 val recyclerViewCenter = lyricsRV.height / 2
                                 val itemCenter = view.top + (view.height / 2)
@@ -324,7 +350,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
 
                         smoothScroller.targetPosition = currentIndex
                         layoutManager.startSmoothScroll(smoothScroller)
-                        // ▲▲▲ AKHIR DARI LOGIKA SCROLL BARU ▲▲▲
                     }
                     handler?.postDelayed(this, 250) // Ulangi setiap 250ms
                 } catch (e: Exception) {
@@ -337,9 +362,17 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         handler?.postDelayed(syncRunnable!!, 0)
     }
 
-    // Tambahkan fungsi parseLrc ini
     private fun parseLrc(lrcText: String): ArrayList<LyricLine> {
         val lyricLines = ArrayList<LyricLine>()
+        // Cek jika teks mengandung tag waktu [00:00.00]
+        if (!lrcText.contains("[")) {
+            // Jika plain text, buat setiap baris dengan waktu 0
+            lrcText.lines().forEach { line ->
+                if (line.isNotBlank()) lyricLines.add(LyricLine(0, line.trim()))
+            }
+            return lyricLines
+        }
+
         val regex = """\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)""".toRegex()
         lrcText.lines().forEach { line ->
             regex.find(line)?.let {
@@ -357,10 +390,9 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
     private fun showLyricsSearchDialog(songArtists: String, songTitle: String) {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Lirik Tidak Tersedia")
-        builder.setMessage("Ingin mencari lirik lagu \"$songTitle\" oleh $songArtists di Musixmatch?")
+        builder.setMessage("Lirik otomatis tidak ditemukan. Ingin mencari lirik lagu \"$songTitle\" di Musixmatch?")
 
         builder.setPositiveButton("Ya") { _, _ ->
-            // Format nama artis dan judul lagu agar cocok dengan URL Musixmatch
             val artist = songArtists.trim().replace(" ", "-")
             val title = songTitle.trim().replace(" ", "-")
             val url = "https://www.musixmatch.com/lyrics/$artist/$title"
@@ -493,24 +525,8 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
             .into(binding.songImgPA)
 
         if (lyricsDialog?.isShowing == true) {
-            try {
-                val audioFile: AudioFile = AudioFileIO.read(File(musicListPA[songPosition].path))
-                val lyricsText = audioFile.tag.getFirst(FieldKey.LYRICS)
-                val parsedLyrics = parseLrc(lyricsText)
-
-                if (parsedLyrics.isNotEmpty()) {
-                    // Jika lagu baru punya lirik, update dialog
-                    lyricsDialog?.dismiss() // Tutup yang lama
-                    setupKaraokeDialog(parsedLyrics) // Buka yang baru dengan lirik baru
-                } else {
-                    // Jika lagu baru tidak punya lirik, tutup dialog
-                    lyricsDialog?.dismiss()
-                    Toast.makeText(this, "Lirik tidak tersedia untuk lagu ini", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                // Jika ada error saat membaca file baru, tutup dialog
-                lyricsDialog?.dismiss()
-            }
+            val currentPath = musicListPA[songPosition].path
+            showLyrics(currentPath)
         }
 
         binding.songNamePA.text = musicListPA[songPosition].title
@@ -534,7 +550,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
             binding.audioInfoTV.text = "$format: $sampleRate  $bitDepth  $bitrate"
             binding.audioInfoTV.visibility = View.VISIBLE
         } catch (e: Exception) {
-            // Jika gagal membaca info, sembunyikan TextView
             binding.audioInfoTV.visibility = View.GONE
             e.printStackTrace()
         }
@@ -573,13 +588,10 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         // Mengambil warna dominan menggunakan Palette
         Palette.from(image).generate { palette ->
             palette?.let {
-                // Ambil dua warna dominan
                 val color1 = it.getDominantColor(0xFFFFFF)
                 var color2 = it.getVibrantColor(0xFFFFFF)
 
-                // Cek apakah color1 dan color2 sama
                 if (color1 == color2) {
-                    // Jika sama, coba ambil warna lain seperti warna gelap atau terang
                     color2 = it.getDarkVibrantColor(0xFFFFFF)
                     if (color1 == color2) {
                         color2 =
@@ -587,19 +599,15 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
                     }
                 }
 
-                // Jika tetap sama, tetapkan warna default untuk color2
                 if (color1 == color2) {
-                    color2 = 0xCCCCCC // Misalnya warna abu-abu default
+                    color2 = 0xCCCCCC
                 }
 
-                // Buat gradien dari kiri ke kanan
                 val gradient = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
                     intArrayOf(color1, color2)
                 )
                 binding.root.background = gradient
-
-                // Ubah warna status bar agar sesuai dengan warna dominan
                 window?.statusBarColor = color1
             }
         }
@@ -619,7 +627,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
             nowPlayingId = musicListPA[songPosition].id
             playMusic()
 
-            // Logika untuk menghitung jumlah putar dijalankan langsung
             val songId = musicListPA[songPosition].id
             var count = MainActivity.playCountMap.getOrDefault(songId, 0)
             count++
@@ -646,10 +653,8 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
 
     private fun prevNextSong(increment: Boolean) {
         if (shuffle) {
-            // Jika shuffle aktif, pilih lagu secara acak
             songPosition = (0 until musicListPA.size).random()
         } else {
-            // Jika shuffle tidak aktif, gunakan urutan biasa
             setSongPosition(increment = increment)
         }
         setLayout()
@@ -676,7 +681,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         createMediaPlayer()
         setLayout()
 
-        // Refresh tampilan "Now Playing" saat lagu selesai
         NowPlaying.binding.songNameNP.isSelected = true
 
         Glide.with(applicationContext)
@@ -783,15 +787,9 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
     }
 
     fun playSongFromQueue(position: Int) {
-        // Pastikan posisi yang dipilih berbeda dengan yang sedang diputar
         if (songPosition != position) {
-            // Atur posisi lagu yang baru
             songPosition = position
-
-            // Buat ulang media player untuk lagu yang baru
             createMediaPlayer()
-
-            // Perbarui seluruh UI di PlayerActivity
             setLayout()
         }
     }

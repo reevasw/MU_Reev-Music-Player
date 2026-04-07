@@ -32,6 +32,38 @@ class SettingsActivity : AppCompatActivity() {
         binding.coolGreenTheme.setOnClickListener { saveTheme(3) }
         binding.coolBlackTheme.setOnClickListener { saveTheme(4) }
         binding.versionName.text = setVersionDetails()
+
+        // Shake to Change
+        val shakeEditor = getSharedPreferences("SHAKE", MODE_PRIVATE)
+        binding.shakeSwitch.isChecked = shakeEditor.getBoolean("shakeToChange", false)
+        binding.shakeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            shakeEditor.edit().putBoolean("shakeToChange", isChecked).apply()
+        }
+
+        // Filter Durasi
+        val filterPrefs = getSharedPreferences("FILTER", MODE_PRIVATE)
+        val currentFilter = filterPrefs.getInt("minDuration", 30) // Default 30 detik
+        updateFilterText(currentFilter)
+
+        binding.filterDurationBtn.setOnClickListener {
+            val durations = arrayOf("Tampilkan Semua", "10 Detik", "30 Detik", "1 Menit", "2 Menit")
+            val durationValues = intArrayOf(0, 10, 30, 60, 120)
+            
+            var selectedIndex = durationValues.indexOf(filterPrefs.getInt("minDuration", 30))
+            if (selectedIndex == -1) selectedIndex = 2
+
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Filter Durasi Minimum")
+                .setSingleChoiceItems(durations, selectedIndex) { dialog, which ->
+                    val selectedDuration = durationValues[which]
+                    filterPrefs.edit().putInt("minDuration", selectedDuration).apply()
+                    updateFilterText(selectedDuration)
+                    Toast.makeText(this, "Filter diterapkan. Refresh halaman utama untuk melihat perubahan.", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+                .show()
+        }
+
         binding.sortBtn.setOnClickListener {
             val menuList = arrayOf("Baru Ditambahkan", "Judul Lagu", "Ukuran File")
             var currentSort = MainActivity.sortOrder
@@ -60,6 +92,16 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 .setNegativeButton("Tidak", null)
                 .show()
+        }
+    }
+
+    private fun updateFilterText(duration: Int) {
+        binding.currentFilterText.text = if (duration == 0) {
+            "Menampilkan semua file audio"
+        } else if (duration < 60) {
+            "Sembunyikan audio di bawah $duration detik"
+        } else {
+            "Sembunyikan audio di bawah ${duration / 60} menit"
         }
     }
 

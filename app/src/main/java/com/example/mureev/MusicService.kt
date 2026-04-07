@@ -6,6 +6,10 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.*
@@ -14,14 +18,34 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import kotlin.math.sqrt
 
-class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
+class MusicService : Service(), AudioManager.OnAudioFocusChangeListener, SensorEventListener {
     private var myBinder = MyBinder()
     var mediaPlayer: MediaPlayer? = null
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var runnable: Runnable
     lateinit var audioManager: AudioManager
     private var currentVolume: Float = 1.0f
+
+    // Sensor variables for Shake to Change
+    private var sensorManager: SensorManager? = null
+    private var acceleration = 0f
+    private var currentAcceleration = 0f
+    private var lastAcceleration = 0f
+
+    override fun onCreate() {
+        super.onCreate()
+        setupSensor()
+    }
+
+    private fun setupSensor() {
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensorManager?.registerListener(this, sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL)
+        acceleration = 10f
+        currentAcceleration = SensorManager.GRAVITY_EARTH
+        lastAcceleration = SensorManager.GRAVITY_EARTH
+    }
 
     override fun onBind(intent: Intent?): IBinder {
         mediaSession = MediaSessionCompat(baseContext, "My Music")
@@ -263,8 +287,34 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         showNotification(R.drawable.play_icon)
     }
 
+    // Sensor Event Listeners
+    override fun onSensorChanged(event: SensorEvent?) {
+        val x = event!!.values[0]
+        val y = event.values[1]
+        val z = event.values[2]
+        lastAcceleration = currentAcceleration
+        currentAcceleration = sqrt((x * x + y * y + z * z).toDouble()).toFloat()
+        val delta: Float = currentAcceleration - lastAcceleration
+        acceleration = acceleration * 0.9f + delta
+
+        if (acceleration > 12) {
+            val shakePrefs = getSharedPreferences("SHAKE", MODE_PRIVATE)
+            val isShakeEnabled = shakePrefs.getBoolean("shakeToChange", false)
+            if (isShakeEnabled) {
+                prevNextSong(increment = true, context = baseContext)
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
     //for making persistent
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        sensorManager?.unregisterListener(this)
     }
 }

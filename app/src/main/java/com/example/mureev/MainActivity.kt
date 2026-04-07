@@ -218,7 +218,7 @@ class MainActivity : AppCompatActivity() {
         binding.refreshLayout.setOnRefreshListener {
             MusicListMA = getAllAudio()
             musicAdapter.updateMusicList(MusicListMA)
-
+            updateMusicSummary()
             binding.refreshLayout.isRefreshing = false
         }
     }
@@ -226,6 +226,11 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("Recycle", "Range")
     private fun getAllAudio(): ArrayList<Music> {
         val tempList = ArrayList<Music>()
+
+        // Mengambil durasi minimum dari SharedPreferences
+        val filterPrefs = getSharedPreferences("FILTER", MODE_PRIVATE)
+        val minDurationSec = filterPrefs.getInt("minDuration", 30)
+        val minDurationMs = minDurationSec * 1000L
 
         // Filter Only Music or Audio Files
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + MediaStore.Audio.Media.MIME_TYPE + " LIKE 'audio/%'"
@@ -256,8 +261,8 @@ class MainActivity : AppCompatActivity() {
                     val uri = Uri.parse("content://media/external/audio/albumart")
                     val artUriC = Uri.withAppendedPath(uri, albumIdC).toString()
 
-                    // Only add the music file if the duration is greater than 0
-                    if (durationC > 0) {
+                    // Filter berdasarkan durasi minimum yang dipilih pengguna
+                    if (durationC >= minDurationMs) {
                         val music = Music(
                             id = idC,
                             title = titleC,
@@ -350,16 +355,27 @@ class MainActivity : AppCompatActivity() {
         playTimeEditor.putString("PlayTimeMap", jsonPlayTime)
         playTimeEditor.apply()
 
-        //for sorting
+        //for sorting and filter
         val sortEditor = getSharedPreferences("SORTING", MODE_PRIVATE)
+        val filterPrefs = getSharedPreferences("FILTER", MODE_PRIVATE)
+        
         val sortValue = sortEditor.getInt("sortOrder", 0)
-        if(sortOrder != sortValue){
+        val currentMinDuration = filterPrefs.getInt("minDuration", 30)
+
+        // Cek jika ada perubahan sorting atau filter durasi
+        if(sortOrder != sortValue || lastMinDuration != currentMinDuration){
             sortOrder = sortValue
+            lastMinDuration = currentMinDuration
             MusicListMA = getAllAudio()
             musicAdapter.updateMusicList(MusicListMA)
+            updateMusicSummary()
         }
+        
         if(PlayerActivity.musicService != null) binding.nowPlaying.visibility = View.VISIBLE
     }
+
+    // Variabel untuk melacak status filter terakhir
+    private var lastMinDuration: Int = -1
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.search_view_menu, menu)
