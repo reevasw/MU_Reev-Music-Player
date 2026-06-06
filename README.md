@@ -1,64 +1,42 @@
 # MU Reev - Android Music Player 🎵
 
-MU Reev adalah aplikasi pemutar musik Android modern yang dibangun dengan Kotlin. Aplikasi ini menawarkan pengalaman mendengarkan musik lokal yang kaya fitur dengan fokus pada personalisasi, statistik pendengaran, dan antarmuka pengguna yang bersih.
+**MU Reev** adalah aplikasi pemutar musik Android modern yang dirancang untuk memberikan pengalaman mendengarkan musik lokal yang personal dan cerdas. Dibangun menggunakan Kotlin dengan arsitektur yang bersih, aplikasi ini merupakan bagian dari Proyek Integrasi Sistem.
 
 ## ✨ Fitur Utama
 
-*   **Pemutaran Musik Lokal**: Memindai dan memutar file audio (MP3, dll) langsung dari penyimpanan perangkat.
-*   **Sistem Tema Dinamis**: Tersedia 5 pilihan tema warna (Cool Pink, Blue, Purple, Green, dan Black) yang dapat disesuaikan dengan selera pengguna.
-*   **Statistik Pendengaran (Stats)**: Melacak lagu, artis, dan album yang paling sering diputar serta total waktu mendengarkan.
-*   **Manajemen Playlist & Favorit**: Buat playlist kustom dan tandai lagu favorit Anda dengan mudah.
-*   **Navigasi Berdasarkan Kategori**: Telusuri musik berdasarkan Lagu, Artis, atau Album.
-*   **Pencarian Cepat**: Temukan lagu favorit Anda secara instan dengan fitur pencarian yang responsif.
-*   **Integrasi Firebase**: Sistem login dan manajemen pengguna menggunakan Firebase Authentication.
-*   **Lirik Lagu**: Dukungan untuk menampilkan lirik saat lagu diputar.
-*   **Antarmuka Responsif**: Menggunakan Material Design Components dan View Binding untuk UI yang halus dan modern.
+*   **Pemutaran Musik Lokal**: Manajemen file audio (MP3, FLAC, M4A, WAV dll) yang efisien menggunakan MediaStore API.
+*   **Sistem Tema Dinamis**: Mendukung mode **Light** dan **Dark** yang dapat disesuaikan melalui pengaturan.
+*   **Statistik Pendengaran (Stats)**: Lacak lagu yang paling sering diputar, artis favorit, dan total waktu mendengarkan.
+*   **Shake to Change**: Ubah lagu secara praktis hanya dengan menggoyangkan perangkat Anda.
+*   **Filter Durasi**: Bersihkan daftar putar Anda dari file audio pendek (seperti ringtone atau pesan suara) dengan filter durasi yang dapat disesuaikan.
+*   **Pencarian Cerdas**: Mendukung pencarian teks dan **Pencarian Suara** untuk menemukan lagu dengan cepat.
+*   **Manajemen Playlist & Favorit**: Atur koleksi musik Anda ke dalam playlist kustom.
+*   **Pencarian Lirik Online**: Integrasi otomatis dengan API lirik (**LRCLIB**) untuk menampilkan lirik lagu secara real-time, mendukung format lirik sinkron (LRC) maupun teks biasa.
+*   **Keamanan dengan Firebase**: Sistem otentikasi aman menggunakan Firebase Auth (Login, Register, & Reset Password).
+*   **Kustomisasi Urutan (Sorting)**: Urutkan lagu berdasarkan Tanggal Ditambahkan, Judul, atau Ukuran File.
 
-## 🛠️ Teknologi yang Digunakan
+## 🛠️ Teknologi & Library
 
-*   **Language**: [Kotlin](https://kotlinlang.org/)
-*   **UI Framework**: Android Jetpack (AppCompat, RecyclerView, ConstraintLayout)
-*   **Architecture**: View Binding
-*   **Database/Storage**: 
-    *   SharedPreferences (untuk preferensi lokal & metadata)
-    *   MediaStore API (untuk akses file media)
-*   **Backend**: Firebase (Auth & Analytics)
-*   **Libraries**:
-    *   [Glide](https://github.com/bumptech/glide) - Loading gambar & album art.
-    *   [Gson](https://github.com/google/gson) - Serialisasi data untuk playlist & favorit.
-    *   [Jaudiotagger](http://www.jthink.net/jaudiotagger/) - Editing/reading metadata audio.
-    *   [OkHttp](https://square.github.io/okhttp/) - Networking.
+*   **Bahasa**: [Kotlin](https://kotlinlang.org/)
+*   **UI Framework**: Android Jetpack (View Binding, ConstraintLayout, Material Design 3)
+*   **Backend**: Firebase (Authentication & Analytics)
+*   **Library Pihak Ketiga**:
+    *   [Glide](https://github.com/bumptech/glide) - Pemuatan gambar & album art yang efisien.
+    *   [Gson](https://github.com/google/gson) - Serialisasi data untuk penyimpanan lokal.
+    *   [Jaudiotagger](http://www.jthink.net/jaudiotagger/) - Membaca dan mengedit metadata file audio.
+    *   [OkHttp](https://square.github.io/okhttp/) - Koneksi jaringan untuk pengambilan lirik online via [LRCLIB](https://lrclib.net/).
+    *   [VerticalSeekBar](https://github.com/h6ah4i/android-widget-verticalseekbar) - Kontrol volume/progres yang unik.
 
-## 📸 Cuplikan Layar
+## 🚀 Versi Saat Ini
+**Versi 1.210.24**
 
-*(Saran: Tambahkan beberapa screenshot aplikasi Anda di sini untuk menarik perhatian)*
+## 📋 Persyaratan Izin
 
-| Main Screen | Player | Playlist | Stats |
-| :---: | :---: | :---: | :---: |
-| ![Main](https://via.placeholder.com/200x400) | ![Player](https://via.placeholder.com/200x400) | ![Playlist](https://via.placeholder.com/200x400) | ![Stats](https://via.placeholder.com/200x400) |
-
-## 🚀 Cara Menjalankan
-
-1.  **Clone Repositori**
-    ```bash
-    git clone https://github.com/username/MUReev.git
-    ```
-2.  **Buka di Android Studio**
-    Pastikan Anda menggunakan versi Android Studio terbaru.
-3.  **Konfigurasi Firebase**
-    *   Buat proyek di [Firebase Console](https://console.firebase.google.com/).
-    *   Tambahkan aplikasi Android dengan package name `com.example.mureev`.
-    *   Unduh file `google-services.json` dan letakkan di folder `app/`.
-    *   Aktifkan Authentication (Email/Password).
-4.  **Build & Run**
-    Hubungkan perangkat Android atau gunakan Emulator, lalu tekan tombol **Run**.
-
-## 📋 Izin (Permissions)
-
-Aplikasi ini memerlukan izin berikut untuk berfungsi dengan optimal:
-*   `READ_EXTERNAL_STORAGE` (Android < 13)
-*   `READ_MEDIA_AUDIO` (Android 13+)
-*   `INTERNET` (Untuk Firebase & Lirik)
+Untuk menjalankan aplikasi ini dengan lancar, izin berikut diperlukan:
+*   `READ_EXTERNAL_STORAGE` / `READ_MEDIA_AUDIO`: Untuk memindai musik di penyimpanan.
+*   `RECORD_AUDIO`: Untuk fitur pencarian suara.
+*   `INTERNET`: Untuk sinkronisasi Firebase dan pengambilan lirik online.
 
 ---
-Developed with ❤️ by Arif
+**Developer:** Arif Septiawardi
+**Project:** TA Proyek Integrasi Sistem
